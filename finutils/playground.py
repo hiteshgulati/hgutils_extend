@@ -1,8 +1,8 @@
-import gamma
+import samplemodule
 from option import Option
 from datetime import datetime
 
-file = gamma.getsum()
+file = samplemodule.getsum()
 print(type(file))
 
 
