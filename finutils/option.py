@@ -16,7 +16,11 @@ class Option:
     def __init__(self, strike,
                  expiry_date, underlying = 'NIFTY',
                  interest_rate=.1, type='c'):
-        self.type = type.upper() #call or put
+        if type == 'CE' or type == 'CA':
+            type = 'c'
+        elif type == 'PE' or type == 'PA':
+            type = 'p'
+        self.type = type.lower() #call or put
         self.strike = strike
         self.expiry_date = expiry_date
         self.underlying = underlying.upper()
@@ -39,6 +43,7 @@ class Option:
     def days_to_expiry(self,from_date = datetime.today()):
         return (self.expiry_date - from_date).days
 
+
     def implied_price(self,spot, actual_volatility, on_date = datetime.today(),
                       interest_rate=None,
                       dividend_yield = 0):
@@ -56,7 +61,6 @@ class Option:
         return iv.implied_volatility(price=actual_price, S=spot,K=self.strike,
                                t=self.days_to_expiry(on_date)/365,
                                r=interest_rate, q=dividend_yield, flag=self.type)
-
 
     def greeks(self, greek, spot, actual_price, on_date=datetime.today(),
               interest_rate=None, dividend_yield=0, type='a'):
@@ -84,4 +88,20 @@ class Option:
                                      q=dividend_yield)
         return measure
 
+    def moneyness(self,spot):
+        moneyness = 0
+        if self.type == 'c':
+            moneyness = spot - self.strike
+        elif self.type == 'p':
+            moneyness = self.strike - spot
+        if moneyness < 0:
+            moneyness = 0
+        return moneyness
 
+    def premium(self, spot, price = None, volatility = None,
+                on_date = datetime.today(), interest_rate=.1, dividend_yield=0):
+        if not price:
+            price = self.implied_price(spot=spot,actual_volatility=volatility,
+                                       on_date=on_date, interest_rate=interest_rate,
+                                       dividend_yield=dividend_yield)
+        return price - self.moneyness(spot)
